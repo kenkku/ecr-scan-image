@@ -210,12 +210,12 @@ const main = async () => {
 
   const ignoredCounts = countIgnoredFindings(ignoredFindings)
   const counts = findings.imageScanFindings.findingSeverityCounts
-  const critical = counts.CRITICAL || 0
-  const high = counts.HIGH || 0
-  const medium = counts.MEDIUM || 0
-  const low = counts.LOW || 0
-  const informational = counts.INFORMATIONAL || 0
-  const indeterminate = counts.UNDEFINED || 0
+  const critical = (counts.CRITICAL || 0) - ignoredCounts.critical
+  const high = (counts.HIGH || 0) - ignoredCounts.high
+  const medium = (counts.MEDIUM || 0) - ignoredCounts.medium
+  const low = (counts.LOW || 0) - ignoredCounts.low
+  const informational = (counts.INFORMATIONAL || 0) - ignoredCounts.informational
+  const indeterminate = (counts.UNDEFINED || 0) - ignoredCounts.undefined
   const ignored = ignoredFindings.length
   const total = critical + high + medium + low + informational + indeterminate
   core.setOutput('critical', critical.toString())
@@ -237,11 +237,11 @@ const main = async () => {
   console.log(`${total.toString().padStart(3, ' ')} Total ${getCount('total', ignoredCounts)}`)
 
   const numFailingVulns =
-    failThreshold === 'informational' ? total - ignoredCounts.informational
-      : failThreshold === 'low' ? critical + high + medium + low - ignoredCounts.low
-        : failThreshold === 'medium' ? critical + high + medium - ignoredCounts.medium
-          : failThreshold === 'high' ? critical + high - ignoredCounts.high
-            : /* failThreshold === 'critical' ? */ critical - ignoredCounts.critical
+    failThreshold === 'informational' ? total
+      : failThreshold === 'low' ? critical + high + medium + low
+        : failThreshold === 'medium' ? critical + high + medium
+          : failThreshold === 'high' ? critical + high
+            : /* failThreshold === 'critical' ? */ critical
 
   if (numFailingVulns > 0) {
     throw new Error(`Detected ${numFailingVulns} vulnerabilities with severity >= ${failThreshold} (the currently configured fail_threshold).`)
